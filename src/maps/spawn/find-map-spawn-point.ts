@@ -10,13 +10,12 @@ export type SpawnSearchConfig = {
   readonly collisionLayers: readonly Phaser.Tilemaps.TilemapLayer[];
   readonly deadlyLayers: readonly Phaser.Tilemaps.TilemapLayer[];
   readonly spawnLayerName?: string;
-  /** Layers scanned in order for platform spawn (topmost solid in left half). */
   readonly spawnCollisionLayerOrder: readonly string[];
 };
 
 /**
- * Resolves spawn from Tiled object layer, or a safe point with feet on solid tiles.
- * Positions assume sprite origin (0.5, 1) — y is the feet.
+ * Resolves spawn from Tiled object layer, or feet on a walkable tile surface.
+ * Positions assume sprite origin (0.5, 1) — y is the feet on top of the tile.
  */
 export function findMapSpawnPoint(
   map: Phaser.Tilemaps.Tilemap,
@@ -24,7 +23,7 @@ export function findMapSpawnPoint(
 ): Phaser.Math.Vector2 {
   const objectSpawn = findSpawnFromObjectLayer(map, config);
 
-  if (objectSpawn && isSpawnSafe(config.deadlyLayers, objectSpawn)) {
+  if (objectSpawn && hasSolidGroundAtFeet(config.collisionLayers, objectSpawn)) {
     logSpawnChoice('object-layer', objectSpawn);
     return objectSpawn;
   }
@@ -32,13 +31,23 @@ export function findMapSpawnPoint(
   const platformSpawn = findSpawnFromPlatforms(config);
 
   if (platformSpawn) {
-    logSpawnChoice('platform-tile', platformSpawn);
+    logSpawnChoice('platform-surface', platformSpawn);
     return platformSpawn;
   }
 
-  const fallback = new Phaser.Math.Vector2(map.tileWidth * 2, map.tileHeight * 3);
-  logSpawnChoice('fallback', fallback);
-  return fallback;
+  const fallback = findSpawnSurfaceAnywhere(config);
+
+  if (fallback) {
+    logSpawnChoice('fallback-surface', fallback);
+    return fallback;
+  }
+
+  const lastResort = new Phaser.Math.Vector2(
+    map.widthInPixels * 0.25,
+    map.heightInPixels - map.tileHeight,
+  );
+  logSpawnChoice('last-resort', lastResort);
+  return lastResort;
 }
 
 function findSpawnFromObjectLayer(
@@ -65,7 +74,7 @@ function findSpawnFromObjectLayer(
 
   return new Phaser.Math.Vector2(
     spawnObject.x + width / 2,
-    spawnObject.y,
+    spawnObject.y + (spawnObject.height ?? 0),
   );
 }
 
@@ -94,7 +103,7 @@ function findSpawnFromPlatforms(
       continue;
     }
 
-    const spawn = findHighestSolidTileSpawn(tilemapLayer, config);
+    const spawn = findSpawnSurfaceInLayer(tilemapLayer, config);
 
     if (spawn) {
       return spawn;
@@ -105,49 +114,152 @@ function findSpawnFromPlatforms(
 }
 
 /**
- * Finds the topmost solid tile in the left half of the map and spawns feet on its surface.
+ * First walkable surface scanning columns left → right (level start at x ≈ 16).
+ * Within each column, uses the lowest surface tile (top of a stack).
  */
-function findHighestSolidTileSpawn(
+function findSpawnSurfaceInLayer(
   tilemapLayer: Phaser.Tilemaps.TilemapLayer,
   config: SpawnSearchConfig,
 ): Phaser.Math.Vector2 | null {
   const map = tilemapLayer.tilemap;
   const searchColumns = Math.max(1, Math.floor(map.width / 2));
 
-  for (let tileY = 0; tileY < map.height; tileY += 1) {
-    for (let tileX = 0; tileX < searchColumns; tileX += 1) {
-      const tile = tilemapLayer.getTileAt(tileX, tileY);
+  for (let tileX = 0; tileX < searchColumns; tileX += 1) {
+    const spawn = findSurfaceInColumn(tilemapLayer, tileX, config);
 
-      if (!tile || tile.index <= 0) {
-        continue;
-      }
-
-      const feetX = tile.getCenterX();
-      const feetY = tile.getTop();
-      const spawn = new Phaser.Math.Vector2(feetX, feetY);
-
-      if (isSpawnSafe(config.deadlyLayers, spawn)) {
-        return spawn;
-      }
+    if (spawn) {
+      return spawn;
     }
   }
 
   return null;
 }
 
-function isSpawnSafe(
-  deadlyLayers: readonly Phaser.Tilemaps.TilemapLayer[],
-  feetPosition: Phaser.Math.Vector2,
-): boolean {
-  for (const layer of deadlyLayers) {
-    const tile = layer.getTileAtWorldXY(feetPosition.x, feetPosition.y - 1, true);
+/** Lowest surface tile in one column (feet on top of land, not inside the stack). */
+function findSurfaceInColumn(
+  layer: Phaser.Tilemaps.TilemapLayer,
+  tileX: number,
+  config: SpawnSearchConfig,
+): Phaser.Math.Vector2 | null {
+  const map = layer.tilemap;
+  let bestSpawn: Phaser.Math.Vector2 | null = null;
+  let bestFeetY = -1;
 
-    if (tile && tile.index > 0) {
-      return false;
+  for (let tileY = 0; tileY < map.height; tileY += 1) {
+    if (!isSurfaceTile(layer, tileX, tileY)) {
+      continue;
+    }
+
+    const spawn = feetOnTileSurface(layer, tileX, tileY);
+
+    if (!spawn || !hasSolidGroundAtFeet(config.collisionLayers, spawn)) {
+      continue;
+    }
+
+    if (spawn.y > bestFeetY) {
+      bestFeetY = spawn.y;
+      bestSpawn = spawn;
     }
   }
 
-  return true;
+  return bestSpawn;
+}
+
+function findSpawnSurfaceAnywhere(
+  config: SpawnSearchConfig,
+): Phaser.Math.Vector2 | null {
+  let bestSpawn: Phaser.Math.Vector2 | null = null;
+  let bestFeetY = -1;
+
+  for (const layer of config.collisionLayers) {
+    const map = layer.tilemap;
+
+    for (let tileX = 0; tileX < map.width; tileX += 1) {
+      for (let tileY = 0; tileY < map.height; tileY += 1) {
+        if (!isSurfaceTile(layer, tileX, tileY)) {
+          continue;
+        }
+
+        const spawn = feetOnTileSurface(layer, tileX, tileY);
+
+        if (!spawn || !hasSolidGroundAtFeet(config.collisionLayers, spawn)) {
+          continue;
+        }
+
+        if (spawn.y > bestFeetY) {
+          bestFeetY = spawn.y;
+          bestSpawn = spawn;
+        }
+      }
+    }
+  }
+
+  return bestSpawn;
+}
+
+/** Solid tile with no solid tile directly above — the block you stand on. */
+function isSurfaceTile(
+  layer: Phaser.Tilemaps.TilemapLayer,
+  tileX: number,
+  tileY: number,
+): boolean {
+  const tile = layer.getTileAt(tileX, tileY);
+
+  if (!tile || tile.index <= 0 || !tile.collides) {
+    return false;
+  }
+
+  if (tileY === 0) {
+    return true;
+  }
+
+  const above = layer.getTileAt(tileX, tileY - 1);
+
+  return !above || above.index <= 0;
+}
+
+/**
+ * World position for feet on top of a surface tile (uses layer offsets).
+ */
+function feetOnTileSurface(
+  layer: Phaser.Tilemaps.TilemapLayer,
+  tileX: number,
+  tileY: number,
+): Phaser.Math.Vector2 | null {
+  const tile = layer.getTileAt(tileX, tileY);
+
+  if (!tile || tile.index <= 0 || !tile.collides) {
+    return null;
+  }
+
+  const world = layer.tileToWorldXY(tileX, tileY);
+
+  if (!world) {
+    return null;
+  }
+
+  const tileWidth = layer.tilemap.tileWidth;
+
+  return new Phaser.Math.Vector2(world.x + tileWidth * 0.5, world.y);
+}
+
+function hasSolidGroundAtFeet(
+  collisionLayers: readonly Phaser.Tilemaps.TilemapLayer[],
+  feetPosition: Phaser.Math.Vector2,
+): boolean {
+  for (const layer of collisionLayers) {
+    const tile = layer.getTileAtWorldXY(
+      feetPosition.x,
+      feetPosition.y + 1,
+      true,
+    );
+
+    if (tile && tile.index > 0 && tile.collides) {
+      return true;
+    }
+  }
+
+  return false;
 }
 
 function logSpawnChoice(

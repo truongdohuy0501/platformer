@@ -1,0 +1,7 @@
+{
+  "id": "coin",
+  "displayName": "Coin",
+  "scoreValue": 1,
+  "useMapTile": true,
+  "hiddenOnCollect": true
+}

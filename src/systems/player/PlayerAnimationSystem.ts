@@ -1,4 +1,5 @@
 import { PlayerAnimationController } from '../../animations/player/PlayerAnimationController';
+import { GameDataRegistry } from '../../data/GameDataRegistry';
 import type { GameContext } from '../GameContext';
 import type { GameSystem } from '../GameSystem';
 
@@ -19,13 +20,14 @@ export class PlayerAnimationSystem implements GameSystem {
     }
 
     if (!this.controller) {
-      this.controller = new PlayerAnimationController(player.sprite);
+      const animationSet = GameDataRegistry.getPlayerAnimation();
+      this.controller = new PlayerAnimationController(player.sprite, animationSet);
     }
 
     this.controller.update(player.sprite);
   }
 
-  destroy(_context: GameContext): void {
+  destroy(): void {
     this.controller = null;
   }
 }

@@ -1,6 +1,7 @@
 import { AnimationSystem } from './AnimationSystem';
 import { InputSystem } from './input/InputSystem';
 import { TouchControlsSystem } from './ui/TouchControlsSystem';
+import { EnemySystem } from './enemies/EnemySystem';
 import { PlayerAnimationSystem } from './player/PlayerAnimationSystem';
 import { PlayerMovementSystem } from './player/PlayerMovementSystem';
 import { PlayerSpawnSystem } from './player/PlayerSpawnSystem';
@@ -20,5 +21,6 @@ export function createGameSystems(): SystemRegistry {
     .register(new TouchControlsSystem())
     .register(new InputSystem())
     .register(new PlayerMovementSystem())
+    .register(new EnemySystem())
     .register(new PlayerAnimationSystem());
 }

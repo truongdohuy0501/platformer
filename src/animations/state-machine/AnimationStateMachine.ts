@@ -27,6 +27,7 @@ export class AnimationStateMachine<TState extends string> {
 
   private playAnimation(animKey: string, ignoreIfPlaying: boolean): void {
     if (!this.sprite.scene.anims.exists(animKey)) {
+      console.warn(`[animations] clip "${animKey}" is not registered`);
       return;
     }
 

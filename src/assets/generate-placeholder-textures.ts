@@ -1,10 +1,12 @@
+import { collectFrameNamesFromClips } from '../animations/collect-frame-names';
 import { AssetKeys } from '../config/asset-keys';
+import { GameDataRegistry } from '../data/GameDataRegistry';
 
 const PLATFORM_TILE_SIZE = 32;
 const PLAYER_FRAME_WIDTH = 32;
 const PLAYER_FRAME_HEIGHT = 48;
 
-const PLAYER_FRAME_COLORS = [
+const PLACEHOLDER_FRAME_COLORS = [
   0x4fc3f7,
   0x5eb8e8,
   0x29b6f6,
@@ -12,11 +14,16 @@ const PLAYER_FRAME_COLORS = [
   0x0288d1,
   0xffa726,
   0xef5350,
+  0xab47bc,
 ] as const;
 
+/** Dev fallback when the player atlas did not load in BootScene. */
 export function registerPlaceholderTextures(scene: Phaser.Scene): void {
-  if (!scene.textures.exists(AssetKeys.PlayerSheet)) {
-    registerPlayerSpritesheet(scene);
+  if (!scene.textures.exists(AssetKeys.Player)) {
+    console.warn(
+      `[assets] "${AssetKeys.Player}" missing — using colored placeholder frames`,
+    );
+    registerPlayerAtlasPlaceholder(scene);
   }
 
   if (!scene.textures.exists(AssetKeys.Platform)) {
@@ -28,38 +35,52 @@ export function registerPlaceholderTextures(scene: Phaser.Scene): void {
       0x6d4c41,
     );
   }
+
+  if (!scene.textures.exists(AssetKeys.EnemySlime)) {
+    createTexture(scene, AssetKeys.EnemySlime, 32, 28, 0x66bb6a);
+  }
 }
 
-function registerPlayerSpritesheet(scene: Phaser.Scene): void {
-  const frameCount = PLAYER_FRAME_COLORS.length;
-  const sheetWidth = PLAYER_FRAME_WIDTH * frameCount;
+function registerPlayerAtlasPlaceholder(scene: Phaser.Scene): void {
+  const animationSet = GameDataRegistry.getPlayerAnimation();
+  const frameNames = collectFrameNamesFromClips(animationSet.clips);
+
+  if (frameNames.length === 0) {
+    throw new Error(
+      `[assets] No frame names defined for animation set "${animationSet.id}"`,
+    );
+  }
+
+  const sheetWidth = PLAYER_FRAME_WIDTH * frameNames.length;
   const graphics = scene.add.graphics();
 
-  for (let index = 0; index < frameCount; index += 1) {
-    graphics.fillStyle(PLAYER_FRAME_COLORS[index], 1);
+  frameNames.forEach((_frameName, index) => {
+    const color =
+      PLACEHOLDER_FRAME_COLORS[index % PLACEHOLDER_FRAME_COLORS.length];
+    graphics.fillStyle(color, 1);
     graphics.fillRect(
       index * PLAYER_FRAME_WIDTH,
       0,
       PLAYER_FRAME_WIDTH,
       PLAYER_FRAME_HEIGHT,
     );
-  }
+  });
 
-  graphics.generateTexture(AssetKeys.PlayerSheet, sheetWidth, PLAYER_FRAME_HEIGHT);
+  graphics.generateTexture(AssetKeys.Player, sheetWidth, PLAYER_FRAME_HEIGHT);
   graphics.destroy();
 
-  const texture = scene.textures.get(AssetKeys.PlayerSheet);
+  const texture = scene.textures.get(AssetKeys.Player);
 
-  for (let index = 0; index < frameCount; index += 1) {
+  frameNames.forEach((frameName, index) => {
     texture.add(
-      String(index),
+      frameName,
       0,
       index * PLAYER_FRAME_WIDTH,
       0,
       PLAYER_FRAME_WIDTH,
       PLAYER_FRAME_HEIGHT,
     );
-  }
+  });
 }
 
 function createTexture(

@@ -51,9 +51,10 @@ export function logDeathTrigger(
   reason: string,
   details: Record<string, unknown>,
 ): void {
-  console.warn('[death]', reason, details);
-
-  if (DEBUG_COLLISION) {
-    console.trace('[death] stack');
+  if (!DEBUG_COLLISION) {
+    return;
   }
+
+  console.warn('[death]', reason, details);
+  console.trace('[death] stack');
 }

@@ -2,6 +2,7 @@ import type { LoadedMap } from '../maps/types';
 import type { CollisionSystem } from '../maps/CollisionSystem';
 import type { Player } from '../entities/Player';
 import type { TouchControlsUI } from '../ui/touch/TouchControlsUI';
+import type { Enemy } from '../enemies/Enemy';
 import { createMovementInput, type MovementInput } from '../input/MovementInput';
 
 export type WorldState = {
@@ -24,5 +25,9 @@ export class GameState {
     this.input = createMovementInput();
     this.score = 0;
     this.isRespawning = false;
+  }
+
+  get enemies(): readonly Enemy[] {
+    return this.world?.loadedMap.enemies ?? [];
   }
 }

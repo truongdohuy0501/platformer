@@ -3,10 +3,9 @@ export {
   type PlayerAnimationKey,
 } from './animation-keys';
 export {
-  PlayerAnimationStateConfig,
   PlayerAnimationStates,
-  PlayerAnimationThresholds,
   type PlayerAnimationStateId,
+  type PlayerAnimationThresholds,
 } from './config/player-animation.config';
 export { PlayerAnimationController } from './player/PlayerAnimationController';
 export { AnimationStateMachine } from './state-machine/AnimationStateMachine';
@@ -15,8 +14,13 @@ export type {
   AnimationStateDefinition,
   AnimationStateMachineConfig,
 } from './state-machine/types';
-export { gameAnimations } from './animation-manifest';
+export { buildStateMachineConfig } from './build-state-machine-config';
+export { collectFrameNamesFromClips } from './collect-frame-names';
+export { resolveAnimationFrames } from './resolve-animation-frames';
 export {
   registerAnimations,
-  type AnimationDefinition,
+  type AnimationClipDefinition,
+  type AnimationFrameSource,
 } from './register-animations';
+export { registerAllGameAnimations } from './register-all-game-animations';
+export type { AnimationSetConfigData } from './types';

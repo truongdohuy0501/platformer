@@ -1,7 +1,10 @@
 import type { PlayerSpawnConfig } from '../config/player.config';
 import type { MovementInput } from '../input/MovementInput';
+import { configurePlayerPhysicsBody } from './configure-player-physics-body';
 import type { Entity } from './Entity';
 import { PlatformerMovementController } from './movement/PlatformerMovementController';
+
+const PLAYER_DEPTH = 100;
 
 export class Player implements Entity {
   readonly id = 'player';
@@ -11,15 +14,27 @@ export class Player implements Entity {
 
   constructor(scene: Phaser.Scene, config: PlayerSpawnConfig) {
     this.movementConfig = config.movement;
+
     this.sprite = scene.physics.add.sprite(
       config.spawn.x,
       config.spawn.y,
       config.textureKey,
-      0,
+      config.defaultFrame,
     );
 
     this.sprite.setOrigin(0.5, 1);
-    this.configurePhysicsBody(config.physicsBody);
+    this.sprite.setFrame(config.defaultFrame);
+    this.sprite.setDepth(PLAYER_DEPTH);
+    this.sprite.setAlpha(1);
+    this.sprite.setVisible(true);
+    this.sprite.clearTint();
+
+    if (config.displaySize) {
+      this.sprite.setDisplaySize(config.displaySize.width, config.displaySize.height);
+    }
+
+    configurePlayerPhysicsBody(this.sprite, config.physicsBody);
+
     this.sprite.setCollideWorldBounds(true);
     this.sprite.setBounce(0);
   }
@@ -35,13 +50,5 @@ export class Player implements Entity {
 
   destroy(): void {
     this.sprite.destroy();
-  }
-
-  private configurePhysicsBody(
-    bodyConfig: PlayerSpawnConfig['physicsBody'],
-  ): void {
-    const body = this.sprite.body as Phaser.Physics.Arcade.Body;
-    body.setSize(bodyConfig.width, bodyConfig.height);
-    body.setOffset(bodyConfig.offsetX, bodyConfig.offsetY);
   }
 }

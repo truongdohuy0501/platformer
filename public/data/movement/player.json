@@ -1,0 +1,24 @@
+{
+  "id": "player",
+  "textureKey": "player",
+  "displaySize": { "width": 52, "height": 48 },
+  "physicsBody": {
+    "width": 24,
+    "height": 36,
+    "offsetX": 4,
+    "offsetY": 12
+  },
+  "movement": {
+    "groundMaxSpeed": 220,
+    "groundAcceleration": 2400,
+    "groundDeceleration": 2800,
+    "airMaxSpeed": 230,
+    "airAcceleration": 1100,
+    "airDeceleration": 700,
+    "jumpVelocity": -440,
+    "jumpCutMultiplier": 0.48,
+    "maxFallSpeed": 560,
+    "coyoteTimeMs": 120,
+    "jumpBufferMs": 150
+  }
+}

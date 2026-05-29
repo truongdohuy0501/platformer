@@ -1,12 +1,11 @@
 export { AssetKeys, type AssetKey } from './asset-keys';
+export { GameDataRegistry } from '../data/GameDataRegistry';
 export { InputKeys, type InputAction } from './input-keys.config';
-export {
-  PlayerConfig,
-  type PlayerMovementConfig,
-  type PlayerPhysicsBodyConfig,
-  type PlayerSpawnConfig,
+export type {
+  PlayerMovementConfig,
+  PlayerPhysicsBodyConfig,
+  PlayerSpawnConfig,
 } from './player.config';
-export { WorldConfig, type PlatformDefinition } from './world.config';
 export {
   GAME_BACKGROUND_COLOR,
   GAME_HEIGHT,

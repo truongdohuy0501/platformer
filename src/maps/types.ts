@@ -1,4 +1,9 @@
 import type Phaser from 'phaser';
+import type { CollectibleSpawnResult } from '../collectibles/spawn-collectibles-from-map';
+import type { LevelConfigData } from '../data/types';
+import type { Enemy } from '../enemies/Enemy';
+
+export type { LevelConfigData as LevelLoadConfig };
 
 export type LoadedTilemapLayer = {
   readonly name: string;
@@ -6,29 +11,15 @@ export type LoadedTilemapLayer = {
 };
 
 export type LoadedMap = {
+  readonly level: LevelConfigData;
   readonly map: Phaser.Tilemaps.Tilemap;
   readonly tileset: Phaser.Tilemaps.Tileset;
   readonly tileLayers: readonly LoadedTilemapLayer[];
   readonly collisionLayers: readonly Phaser.Tilemaps.TilemapLayer[];
   readonly deadlyLayers: readonly Phaser.Tilemaps.TilemapLayer[];
-  readonly coins: Phaser.Physics.Arcade.StaticGroup;
+  readonly collectibles: CollectibleSpawnResult;
+  readonly enemies: readonly Enemy[];
   readonly spawnPoint: Phaser.Math.Vector2;
   readonly worldWidth: number;
   readonly worldHeight: number;
-};
-
-export type LevelLoadConfig = {
-  readonly mapKey: string;
-  readonly mapPath: string;
-  readonly tilesetName: string;
-  readonly tilesetImageKey: string;
-  readonly tilesetImagePath: string;
-  readonly tileLayerOrder: readonly string[];
-  readonly spawnCollisionLayerOrder: readonly string[];
-  readonly objectLayers: {
-    readonly coins: string;
-    readonly spawn?: string;
-  };
-  readonly collisionProperty: string;
-  readonly deadlyProperty: string;
 };

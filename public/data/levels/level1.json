@@ -1,0 +1,37 @@
+{
+  "id": "level1",
+  "mapKey": "level1",
+  "mapPath": "/maps/level1.json",
+  "tilesetName": "H2",
+  "tilesetImageKey": "tileset-h2",
+  "tilesetImagePath": "/tiles/H2.jpeg",
+  "tileLayerOrder": [
+    "land",
+    "ground",
+    "rock",
+    "mushroom",
+    "cloud",
+    "water"
+  ],
+  "spawnCollisionLayerOrder": ["land", "ground", "rock"],
+  "objectLayers": {
+    "spawn": "spawn",
+    "collectibles": "coins",
+    "enemies": "enemies"
+  },
+  "collectibleSpawns": {
+    "objectLayer": "coins",
+    "propertyKey": "type",
+    "defaultType": "coin"
+  },
+  "enemySpawns": {
+    "objectLayer": "enemies",
+    "propertyKey": "type"
+  },
+  "collisionProperty": "collides",
+  "deadlyProperty": "deadly",
+  "gameplay": {
+    "gravityY": 300,
+    "respawnInvincibilityMs": 1200
+  }
+}

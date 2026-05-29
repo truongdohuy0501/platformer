@@ -1,0 +1,48 @@
+{
+  "id": "player",
+  "textureKey": "player",
+  "defaultFrame": "idle-0",
+  "clips": [
+    {
+      "key": "player-idle",
+      "textureKey": "player",
+      "frames": { "type": "names", "names": ["idle-0", "idle-1"] },
+      "frameRate": 4,
+      "repeat": -1
+    },
+    {
+      "key": "player-run",
+      "textureKey": "player",
+      "frames": { "type": "names", "names": ["run-0", "run-1", "run-2"] },
+      "frameRate": 10,
+      "repeat": -1
+    },
+    {
+      "key": "player-jump",
+      "textureKey": "player",
+      "frames": { "type": "names", "names": ["jump-0"] },
+      "frameRate": 1,
+      "repeat": 0
+    },
+    {
+      "key": "player-fall",
+      "textureKey": "player",
+      "frames": { "type": "names", "names": ["fall-0"] },
+      "frameRate": 1,
+      "repeat": 0
+    }
+  ],
+  "stateMachine": {
+    "thresholds": {
+      "runSpeed": 15,
+      "jumpVelocityY": -20,
+      "fallVelocityY": 20
+    },
+    "states": {
+      "idle": { "clipKey": "player-idle", "ignoreIfPlaying": true },
+      "run": { "clipKey": "player-run", "ignoreIfPlaying": true },
+      "jump": { "clipKey": "player-jump", "ignoreIfPlaying": true },
+      "fall": { "clipKey": "player-fall", "ignoreIfPlaying": true }
+    }
+  }
+}

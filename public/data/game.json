@@ -1,0 +1,9 @@
+{
+  "defaultLevelId": "level1",
+  "movementId": "player",
+  "playerAnimationId": "player",
+  "levels": ["level1"],
+  "collectibles": ["coin"],
+  "enemies": ["patrol-slime"],
+  "animations": ["player"]
+}

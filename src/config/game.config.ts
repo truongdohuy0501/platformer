@@ -1,5 +1,5 @@
 import Phaser from 'phaser';
-import { DEBUG_COLLISION } from './debug.config';
+import { DEBUG_PHYSICS_BODY } from './debug.config';
 
 export const GAME_WIDTH = 1280;
 export const GAME_HEIGHT = 720;
@@ -24,6 +24,6 @@ export const PhysicsConfig: Phaser.Types.Core.PhysicsConfig = {
   default: 'arcade',
   arcade: {
     gravity: { x: 0, y: PLATFORMER_GRAVITY_Y },
-    debug: DEBUG_COLLISION,
+    debug: DEBUG_PHYSICS_BODY,
   },
 };

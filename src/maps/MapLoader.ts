@@ -1,6 +1,7 @@
 import type Phaser from 'phaser';
-import { DEBUG_COLLISION } from '../config/debug.config';
-import { createCoinGroup } from './objects/create-coin-group';
+import { spawnCollectiblesFromMap } from '../collectibles/spawn-collectibles-from-map';
+import type { LevelConfigData } from '../data/types';
+import { spawnEnemiesFromMap } from '../enemies/spawn-enemies-from-map';
 import { findMapSpawnPoint } from './spawn/find-map-spawn-point';
 import { applyTiledLayerOffset } from './tiled/apply-tiled-layer-offset';
 import {
@@ -8,26 +9,26 @@ import {
   layerHasBooleanProperty,
 } from './tiled/tiled-layer-properties';
 import { setupTilemapLayerCollision } from './tiled/setup-tilemap-collision';
-import type { LevelLoadConfig, LoadedMap, LoadedTilemapLayer } from './types';
+import type { LoadedMap, LoadedTilemapLayer } from './types';
 
 const TILE_SIZE = 32;
 
 /**
- * Loads Tiled JSON maps, tilesets, layers, coins, and spawn metadata.
+ * Loads Tiled JSON maps, tilesets, layers, and data-driven gameplay objects.
  */
 export class MapLoader {
-  static preload(scene: Phaser.Scene, config: LevelLoadConfig): void {
+  static preload(scene: Phaser.Scene, config: LevelConfigData): void {
     scene.load.tilemapTiledJSON(config.mapKey, config.mapPath);
     scene.load.image(config.tilesetImageKey, config.tilesetImagePath);
   }
 
-  static load(scene: Phaser.Scene, config: LevelLoadConfig): LoadedMap {
-    configureArcadePhysics(scene);
+  static load(scene: Phaser.Scene, level: LevelConfigData): LoadedMap {
+    const map = scene.make.tilemap({ key: level.mapKey });
 
-    const map = scene.make.tilemap({ key: config.mapKey });
+    configureArcadePhysics(scene, level, map);
     const tileset = map.addTilesetImage(
-      config.tilesetName,
-      config.tilesetImageKey,
+      level.tilesetName,
+      level.tilesetImageKey,
       TILE_SIZE,
       TILE_SIZE,
       0,
@@ -37,55 +38,49 @@ export class MapLoader {
 
     if (!tileset) {
       throw new Error(
-        `Tileset "${config.tilesetName}" could not be attached to map "${config.mapKey}"`,
+        `Tileset "${level.tilesetName}" could not be attached to map "${level.mapKey}"`,
       );
     }
 
-    const tileLayers = createTileLayers(map, tileset, config.tileLayerOrder);
+    const tileLayers = createTileLayers(map, tileset, level.tileLayerOrder);
     const collisionLayers = collectLayersByProperty(
       tileLayers,
-      config.collisionProperty,
+      level.collisionProperty,
     );
     const deadlyLayers = collectLayersByProperty(
       tileLayers,
-      config.deadlyProperty,
+      level.deadlyProperty,
     );
 
     applyCollisions(collisionLayers);
     applyDeadlyTileOverlap(collisionLayers, deadlyLayers);
 
-    const coins = createCoinGroup(
+    const collectibles = spawnCollectiblesFromMap(
       scene,
       map,
       tileset,
-      config.objectLayers.coins,
-      config.tilesetImageKey,
+      level.tilesetImageKey,
+      level,
     );
+
+    const enemies = spawnEnemiesFromMap(scene, map, level);
 
     const spawnPoint = findMapSpawnPoint(map, {
       collisionLayers: collisionLayers.map((entry) => entry.layer),
       deadlyLayers: deadlyLayers.map((entry) => entry.layer),
-      spawnLayerName: config.objectLayers.spawn,
-      spawnCollisionLayerOrder: config.spawnCollisionLayerOrder,
+      spawnLayerName: level.objectLayers.spawn,
+      spawnCollisionLayerOrder: level.spawnCollisionLayerOrder,
     });
 
-    if (DEBUG_COLLISION) {
-      console.info('[map] loaded', {
-        mapKey: config.mapKey,
-        collisionLayers: collisionLayers.map((entry) => entry.name),
-        deadlyLayers: deadlyLayers.map((entry) => entry.name),
-        spawnPoint: { x: spawnPoint.x, y: spawnPoint.y },
-        worldSize: { w: map.widthInPixels, h: map.heightInPixels },
-      });
-    }
-
     return {
+      level,
       map,
       tileset,
       tileLayers,
       collisionLayers: collisionLayers.map((entry) => entry.layer),
       deadlyLayers: deadlyLayers.map((entry) => entry.layer),
-      coins,
+      collectibles,
+      enemies,
       spawnPoint,
       worldWidth: map.widthInPixels,
       worldHeight: map.heightInPixels,
@@ -106,9 +101,15 @@ export class MapLoader {
   }
 }
 
-function configureArcadePhysics(scene: Phaser.Scene): void {
+function configureArcadePhysics(
+  scene: Phaser.Scene,
+  level: LevelConfigData,
+  map: Phaser.Tilemaps.Tilemap,
+): void {
   scene.physics.world.setFPS(60);
   scene.physics.world.TILE_BIAS = 24;
+  scene.physics.world.gravity.y = level.gameplay.gravityY;
+  scene.physics.world.setBounds(0, 0, map.widthInPixels, map.heightInPixels, true);
 }
 
 function createTileLayers(
@@ -150,7 +151,6 @@ function applyCollisions(layers: readonly LoadedTilemapLayer[]): void {
   }
 }
 
-/** Deadly layers need collision data on tiles for overlap detection, but no solid collider. */
 function applyDeadlyTileOverlap(
   collisionLayers: readonly LoadedTilemapLayer[],
   deadlyLayers: readonly LoadedTilemapLayer[],

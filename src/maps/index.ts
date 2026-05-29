@@ -1,8 +1,6 @@
 export { CollisionSystem } from './CollisionSystem';
-export type { CollisionHandlers, CollisionSetupConfig } from './CollisionSystem';
 export { MapLoader } from './MapLoader';
-export { Level1Config } from './levels/level1.config';
-export { MapKeys, type MapKey } from './map-keys';
-export { createCoinGroup } from './objects/create-coin-group';
-export { findMapSpawnPoint } from './spawn/find-map-spawn-point';
-export type { LevelLoadConfig, LoadedMap, LoadedTilemapLayer } from './types';
+export { GameDataRegistry } from '../data/GameDataRegistry';
+export type { LevelLoadConfig } from './types';
+export type { LevelConfigData } from '../data/types';
+export type { LoadedMap, LoadedTilemapLayer } from './types';

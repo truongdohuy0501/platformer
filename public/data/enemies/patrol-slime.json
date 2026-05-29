@@ -1,0 +1,25 @@
+{
+  "id": "patrol-slime",
+  "displayName": "Patrol Slime",
+  "sprite": {
+    "textureKey": "enemy-slime",
+    "frame": 0,
+    "displayWidth": 32,
+    "displayHeight": 28
+  },
+  "physicsBody": {
+    "width": 28,
+    "height": 24,
+    "offsetX": 2,
+    "offsetY": 4
+  },
+  "behavior": {
+    "type": "patrol",
+    "speed": 70,
+    "patrolDistance": 96,
+    "startDirection": "left"
+  },
+  "contact": {
+    "damagesPlayer": true
+  }
+}
