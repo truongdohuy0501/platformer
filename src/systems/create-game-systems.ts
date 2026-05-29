@@ -1,5 +1,6 @@
 import { AnimationSystem } from './AnimationSystem';
 import { InputSystem } from './input/InputSystem';
+import { FullscreenSystem } from './ui/FullscreenSystem';
 import { TouchControlsSystem } from './ui/TouchControlsSystem';
 import { EnemySystem } from './enemies/EnemySystem';
 import { PlayerAnimationSystem } from './player/PlayerAnimationSystem';
@@ -19,6 +20,7 @@ export function createGameSystems(): SystemRegistry {
     .register(new CollisionSetupSystem())
     .register(new AnimationSystem())
     .register(new TouchControlsSystem())
+    .register(new FullscreenSystem())
     .register(new InputSystem())
     .register(new PlayerMovementSystem())
     .register(new EnemySystem())

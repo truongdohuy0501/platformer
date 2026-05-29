@@ -6,4 +6,5 @@ export const UiDepths = {
   Overlay: 2000,
   Modal: 3000,
   TouchControls: 4000,
+  FullscreenButton: 4100,
 } as const;

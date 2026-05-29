@@ -24,7 +24,10 @@ export function createPhaserConfig(
     pixelArt: RenderConfig.pixelArt,
     antialias: RenderConfig.antialias,
     roundPixels: RenderConfig.roundPixels,
-    scale: ScaleConfig,
+    scale: {
+      ...ScaleConfig,
+      fullscreenTarget: parent,
+    },
     physics: PhysicsConfig,
     input: {
       activePointers: InputConfig.activePointers,
